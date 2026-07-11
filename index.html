@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>Painel da Cozinha</title>
+  <style>
+    html, body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #101820;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    body {
+      background: -webkit-linear-gradient(top, #142536 0%, #0b1118 100%);
+      background: linear-gradient(to bottom, #142536 0%, #0b1118 100%);
+    }
+
+    .dashboard {
+      height: 100%;
+      padding: 26px 34px 22px;
+      box-sizing: border-box;
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-box-orient: vertical;
+      -webkit-flex-direction: column;
+      flex-direction: column;
+    }
+
+    .top {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-box-pack: justify;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+      -webkit-box-align: start;
+      -webkit-align-items: flex-start;
+      align-items: flex-start;
+    }
+
+    .time {
+      font-size: 112px;
+      line-height: 0.9;
+      font-weight: 200;
+      letter-spacing: -5px;
+    }
+
+    .date {
+      margin-top: 14px;
+      font-size: 26px;
+      font-weight: 300;
+      opacity: 0.82;
+      text-transform: capitalize;
+    }
+
+    .place {
+      text-align: right;
+      font-size: 22px;
+      opacity: 0.78;
+      padding-top: 8px;
+    }
+
+    .weather {
+      margin-top: 32px;
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-box-align: center;
+      -webkit-align-items: center;
+      align-items: center;
+      padding: 24px 28px;
+      border: 1px solid rgba(255,255,255,0.13);
+      background: rgba(255,255,255,0.07);
+      border-radius: 20px;
+    }
+
+    .weather-icon {
+      width: 120px;
+      text-align: center;
+      font-size: 74px;
+      line-height: 1;
+    }
+
+    .temperature {
+      font-size: 78px;
+      font-weight: 200;
+      line-height: 1;
+      min-width: 190px;
+    }
+
+    .condition {
+      font-size: 28px;
+      font-weight: 300;
+      margin-bottom: 10px;
+    }
+
+    .details {
+      font-size: 20px;
+      opacity: 0.72;
+      line-height: 1.5;
+    }
+
+    .forecast {
+      margin-top: 24px;
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-box-pack: justify;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+    }
+
+    .day {
+      width: 18%;
+      text-align: center;
+      padding: 16px 5px;
+      box-sizing: border-box;
+      background: rgba(255,255,255,0.045);
+      border-radius: 14px;
+    }
+
+    .day-name {
+      font-size: 18px;
+      opacity: 0.76;
+      text-transform: capitalize;
+    }
+
+    .day-icon {
+      font-size: 35px;
+      margin: 8px 0;
+    }
+
+    .day-temp {
+      font-size: 18px;
+    }
+
+    .footer {
+      margin-top: auto;
+      padding-top: 18px;
+      font-size: 14px;
+      opacity: 0.48;
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-box-pack: justify;
+      -webkit-justify-content: space-between;
+      justify-content: space-between;
+    }
+
+    .error {
+      color: #ffd7a6;
+    }
+
+    @media (orientation: portrait) {
+      .time { font-size: 90px; }
+      .weather { margin-top: 24px; }
+      .forecast { margin-top: 18px; }
+      .dashboard { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <div class="top">
+      <div>
+        <div id="time" class="time">--:--</div>
+        <div id="date" class="date">Carregando...</div>
+      </div>
+      <div class="place">São Pedro da Aldeia<br>Rio de Janeiro</div>
+    </div>
+
+    <div class="weather">
+      <div id="weatherIcon" class="weather-icon">☀️</div>
+      <div id="temperature" class="temperature">--°</div>
+      <div>
+        <div id="condition" class="condition">Carregando previsão...</div>
+        <div class="details">
+          Sensação: <span id="feels">--°</span><br>
+          Umidade: <span id="humidity">--%</span> &nbsp;·&nbsp;
+          Vento: <span id="wind">-- km/h</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="forecast" class="forecast"></div>
+
+    <div class="footer">
+      <span id="status">Atualização automática a cada 30 minutos</span>
+      <span>Dados meteorológicos: Open-Meteo</span>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      // São Pedro da Aldeia, RJ
+      var LATITUDE = -22.8362;
+      var LONGITUDE = -42.1037;
+      var API =
+        "https://api.open-meteo.com/v1/forecast" +
+        "?latitude=" + LATITUDE +
+        "&longitude=" + LONGITUDE +
+        "&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m" +
+        "&daily=weather_code,temperature_2m_max,temperature_2m_min" +
+        "&timezone=America%2FSao_Paulo" +
+        "&forecast_days=5";
+
+      var dayNames = ["domingo", "segunda-feira", "terça-feira", "quarta-feira", "quinta-feira", "sexta-feira", "sábado"];
+      var monthNames = ["janeiro", "fevereiro", "março", "abril", "maio", "junho",
+                        "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+
+      function pad(n) {
+        return n < 10 ? "0" + n : String(n);
+      }
+
+      function updateClock() {
+        var now = new Date();
+        document.getElementById("time").innerHTML = pad(now.getHours()) + ":" + pad(now.getMinutes());
+        document.getElementById("date").innerHTML =
+          dayNames[now.getDay()] + ", " + now.getDate() + " de " + monthNames[now.getMonth()];
+      }
+
+      function weatherInfo(code) {
+        if (code === 0) return ["☀️", "Céu limpo"];
+        if (code === 1) return ["🌤️", "Predominantemente limpo"];
+        if (code === 2) return ["⛅", "Parcialmente nublado"];
+        if (code === 3) return ["☁️", "Nublado"];
+        if (code === 45 || code === 48) return ["🌫️", "Neblina"];
+        if (code === 51 || code === 53 || code === 55) return ["🌦️", "Garoa"];
+        if (code === 56 || code === 57) return ["🌧️", "Garoa congelante"];
+        if (code === 61 || code === 63 || code === 65) return ["🌧️", "Chuva"];
+        if (code === 66 || code === 67) return ["🌧️", "Chuva congelante"];
+        if (code === 71 || code === 73 || code === 75 || code === 77) return ["❄️", "Neve"];
+        if (code === 80 || code === 81 || code === 82) return ["🌦️", "Pancadas de chuva"];
+        if (code === 85 || code === 86) return ["🌨️", "Pancadas de neve"];
+        if (code === 95 || code === 96 || code === 99) return ["⛈️", "Trovoadas"];
+        return ["🌡️", "Condição variável"];
+      }
+
+      function setStatus(text, isError) {
+        var el = document.getElementById("status");
+        el.innerHTML = text;
+        el.className = isError ? "error" : "";
+      }
+
+      function renderWeather(data) {
+        var current = data.current;
+        var info = weatherInfo(current.weather_code);
+
+        document.getElementById("weatherIcon").innerHTML = info[0];
+        document.getElementById("temperature").innerHTML = Math.round(current.temperature_2m) + "°";
+        document.getElementById("condition").innerHTML = info[1];
+        document.getElementById("feels").innerHTML = Math.round(current.apparent_temperature) + "°";
+        document.getElementById("humidity").innerHTML = Math.round(current.relative_humidity_2m) + "%";
+        document.getElementById("wind").innerHTML = Math.round(current.wind_speed_10m) + " km/h";
+
+        var html = "";
+        var i;
+        for (i = 0; i < data.daily.time.length; i++) {
+          var dateParts = data.daily.time[i].split("-");
+          var d = new Date(Number(dateParts[0]), Number(dateParts[1]) - 1, Number(dateParts[2]));
+          var dailyInfo = weatherInfo(data.daily.weather_code[i]);
+          html +=
+            '<div class="day">' +
+              '<div class="day-name">' + (i === 0 ? "hoje" : dayNames[d.getDay()].replace("-feira", "")) + '</div>' +
+              '<div class="day-icon">' + dailyInfo[0] + '</div>' +
+              '<div class="day-temp">' +
+                Math.round(data.daily.temperature_2m_max[i]) + '° / ' +
+                Math.round(data.daily.temperature_2m_min[i]) + '°' +
+              '</div>' +
+            '</div>';
+        }
+        document.getElementById("forecast").innerHTML = html;
+
+        var now = new Date();
+        setStatus("Atualizado às " + pad(now.getHours()) + ":" + pad(now.getMinutes()), false);
+      }
+
+      function loadWeather() {
+        var xhr = new XMLHttpRequest();
+        xhr.open("GET", API, true);
+        xhr.timeout = 15000;
+
+        xhr.onreadystatechange = function () {
+          if (xhr.readyState === 4) {
+            if (xhr.status >= 200 && xhr.status < 300) {
+              try {
+                renderWeather(JSON.parse(xhr.responseText));
+              } catch (e) {
+                setStatus("Não foi possível interpretar os dados meteorológicos.", true);
+              }
+            } else {
+              setStatus("Sem conexão com a previsão. Nova tentativa em 30 minutos.", true);
+            }
+          }
+        };
+
+        xhr.onerror = function () {
+          setStatus("Sem conexão com a previsão. Nova tentativa em 30 minutos.", true);
+        };
+
+        xhr.ontimeout = function () {
+          setStatus("A previsão demorou para responder. Nova tentativa automática.", true);
+        };
+
+        xhr.send();
+      }
+
+      updateClock();
+      loadWeather();
+
+      setInterval(updateClock, 1000);
+      setInterval(loadWeather, 30 * 60 * 1000);
+    }());
+  </script>
+</body>
+</html>
