@@ -473,6 +473,7 @@
         <div class="photo-full"><img id="photo" alt=""></div>
         <div class="photo-controls">
           <button class="refresh" id="prevPhoto" type="button">← Anterior</button>
+          <button class="refresh" id="addPhotoBtn" type="button">+ Adicionar foto</button>
           <button class="refresh" id="nextPhotoBtn" type="button">Próxima →</button>
         </div>
         <div class="help" id="photoCounter">—</div>
@@ -908,6 +909,21 @@
       }
       document.getElementById("nextPhotoBtn").onclick = nextPhoto;
       document.getElementById("prevPhoto").onclick = prevPhoto;
+      document.getElementById("addPhotoBtn").onclick = function () {
+        var url = window.prompt("Cole a URL direta da imagem (ex.: raw.githubusercontent.com/.../foto.jpg):");
+        if (!url) return;
+        url = url.replace(/^\s+|\s+$/g, "");
+        if (!url) return;
+        if (url.indexOf("http") !== 0) {
+          window.alert("URL inválida. Use um link direto começando com http:// ou https://");
+          return;
+        }
+        PHOTOS.push(url);
+        savePhotos(PHOTOS);
+        photoIdx = PHOTOS.length - 1;
+        showPhoto();
+        if (photoUrlsTa) photoUrlsTa.value = PHOTOS.join("\n");
+      };
       nextPhoto();
       setInterval(nextPhoto, 20000);
 
