@@ -84,6 +84,116 @@
     .refresh:active { background: rgba(255,255,255,0.22); }
     .refresh[disabled] { opacity: 0.5; }
 
+    .nav {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: flex;
+      -webkit-flex-wrap: wrap;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    .nav button {
+      -webkit-appearance: none;
+      appearance: none;
+      background: rgba(255,255,255,0.06);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 999px;
+      padding: 10px 20px;
+      margin-right: 10px;
+      margin-bottom: 8px;
+      font-size: 17px;
+      cursor: pointer;
+      -webkit-tap-highlight-color: rgba(255,255,255,0.15);
+    }
+    .nav button.active {
+      background: rgba(255,255,255,0.22);
+      border-color: rgba(255,255,255,0.45);
+    }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* Full screen shopping/photos/settings pages */
+    .page-shopping .shop-item,
+    .page-settings label { font-size: 20px; }
+    .add-row {
+      display: -webkit-box;
+      display: -webkit-flex;
+      display: flex;
+      margin-top: 12px;
+      margin-bottom: 14px;
+    }
+    .add-row input[type=text] {
+      -webkit-box-flex: 1;
+      -webkit-flex: 1 1 auto;
+      flex: 1 1 auto;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.20);
+      border-radius: 10px;
+      color: #fff;
+      font-size: 18px;
+      padding: 10px 14px;
+      margin-right: 10px;
+      -webkit-appearance: none;
+    }
+    .add-row button, .save-btn {
+      -webkit-appearance: none;
+      background: rgba(90,170,255,0.28);
+      color: #fff;
+      border: 1px solid rgba(150,200,255,0.4);
+      border-radius: 10px;
+      padding: 10px 18px;
+      font-size: 17px;
+      cursor: pointer;
+    }
+    .shop-item .del {
+      float: right;
+      opacity: 0.5;
+      padding: 0 8px;
+      font-size: 20px;
+    }
+    .shop-item .del:active { opacity: 1; }
+    textarea.photo-urls {
+      width: 100%;
+      min-height: 220px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.20);
+      border-radius: 12px;
+      color: #fff;
+      font-size: 15px;
+      padding: 12px 14px;
+      box-sizing: border-box;
+      font-family: Menlo, Consolas, monospace;
+      -webkit-appearance: none;
+    }
+    .help {
+      opacity: 0.65;
+      font-size: 14px;
+      margin: 8px 0 12px;
+      line-height: 1.5;
+    }
+    .photo-full {
+      width: 100%;
+      height: 62vh;
+      border-radius: 20px;
+      overflow: hidden;
+      background: #000;
+      border: 1px solid rgba(255,255,255,0.12);
+    }
+    .photo-full img { width: 100%; height: 100%; object-fit: cover; }
+    .photo-controls { margin-top: 14px; text-align: center; }
+    .photo-controls button { margin: 0 8px; }
+    .saved-flash {
+      display: inline-block;
+      margin-left: 12px;
+      color: #9be29b;
+      opacity: 0;
+      -webkit-transition: opacity 0.3s ease;
+      transition: opacity 0.3s ease;
+    }
+    .saved-flash.show { opacity: 1; }
+
     .weather {
       margin-top: 32px;
       display: -webkit-box;
@@ -316,6 +426,14 @@
       <div class="place">São Pedro da Aldeia<br>Rio de Janeiro</div>
     </div>
 
+    <div class="nav" id="nav">
+      <button data-page="home" class="active">🏠 Início</button>
+      <button data-page="shopping">🛒 Compras</button>
+      <button data-page="photos">📸 Fotos</button>
+      <button data-page="settings">⚙️ Ajustes</button>
+    </div>
+
+    <div id="page-home" class="page active">
     <div class="weather">
       <div id="weatherIcon" class="weather-icon">☀️</div>
       <div id="temperature" class="temperature">--°</div>
@@ -335,14 +453,42 @@
       <div class="calendar-title">Próximos eventos</div>
       <div id="events"><div class="event-empty">Carregando agenda...</div></div>
     </div>
+    </div>
 
-    <div class="bottom-row">
-      <div class="shopping">
+    <div id="page-shopping" class="page page-shopping">
+      <div class="calendar">
         <div class="panel-title">Lista de compras</div>
+        <div class="add-row">
+          <input type="text" id="newItem" placeholder="Adicionar item...">
+          <button id="addItem" type="button">Adicionar</button>
+        </div>
         <div id="shoppingList"></div>
+        <div class="help">Toque no item para marcar/desmarcar. Toque no × para remover. A lista é salva neste iPad.</div>
       </div>
-      <div class="photo">
-        <img id="photo" alt="">
+    </div>
+
+    <div id="page-photos" class="page">
+      <div class="calendar">
+        <div class="panel-title">Fotos em rotação</div>
+        <div class="photo-full"><img id="photo" alt=""></div>
+        <div class="photo-controls">
+          <button class="refresh" id="prevPhoto" type="button">← Anterior</button>
+          <button class="refresh" id="nextPhotoBtn" type="button">Próxima →</button>
+        </div>
+        <div class="help" id="photoCounter">—</div>
+      </div>
+    </div>
+
+    <div id="page-settings" class="page">
+      <div class="calendar">
+        <div class="panel-title">URLs das fotos</div>
+        <div class="help">Uma URL por linha. Use links diretos para imagens (jpg/png). Ex.: GitHub raw, Imgur direto.</div>
+        <textarea id="photoUrls" class="photo-urls" spellcheck="false" autocapitalize="off" autocorrect="off"></textarea>
+        <div style="margin-top:10px">
+          <button class="save-btn" id="savePhotos" type="button">Salvar fotos</button>
+          <button class="refresh" id="resetPhotos" type="button">Restaurar padrão</button>
+          <span class="saved-flash" id="photosSaved">✓ Salvo</span>
+        </div>
       </div>
     </div>
 
@@ -628,43 +774,61 @@
         setTimeout(function () { btn.disabled = false; }, 2000);
       };
 
-      /* -------- Shopping list (edit array below; state saved on device) -------- */
-      var SHOPPING_ITEMS = [
-        "Pão",
-        "Leite",
-        "Café",
-        "Frutas",
-        "Ovos",
-        "Arroz"
-      ];
-      var SHOP_KEY = "kioskShoppingDone";
+      /* -------- Shopping list (editable, saved on device) -------- */
+      var DEFAULT_SHOPPING = ["Pão", "Leite", "Café", "Frutas", "Ovos", "Arroz"];
+      var SHOP_ITEMS_KEY = "kioskShoppingItems";
+      var SHOP_DONE_KEY = "kioskShoppingDone";
 
+      function loadShopItems() {
+        try {
+          var raw = window.localStorage.getItem(SHOP_ITEMS_KEY);
+          if (raw) return JSON.parse(raw);
+        } catch (e) {}
+        return DEFAULT_SHOPPING.slice();
+      }
+      function saveShopItems(list) {
+        try { window.localStorage.setItem(SHOP_ITEMS_KEY, JSON.stringify(list)); } catch (e) {}
+      }
       function loadShopState() {
         try {
-          var raw = window.localStorage.getItem(SHOP_KEY);
+          var raw = window.localStorage.getItem(SHOP_DONE_KEY);
           return raw ? JSON.parse(raw) : {};
         } catch (e) { return {}; }
       }
       function saveShopState(state) {
-        try { window.localStorage.setItem(SHOP_KEY, JSON.stringify(state)); } catch (e) {}
+        try { window.localStorage.setItem(SHOP_DONE_KEY, JSON.stringify(state)); } catch (e) {}
       }
       function renderShopping() {
+        var items = loadShopItems();
         var state = loadShopState();
         var html = "";
-        for (var i = 0; i < SHOPPING_ITEMS.length; i++) {
-          var name = SHOPPING_ITEMS[i];
+        for (var i = 0; i < items.length; i++) {
+          var name = items[i];
           var done = !!state[name];
           html +=
             '<div class="shop-item' + (done ? ' done' : '') + '" data-name="' + escapeHtml(name) + '">' +
+              '<span class="del" data-del="' + escapeHtml(name) + '">×</span>' +
               '<span class="shop-check">' + (done ? '✓' : '') + '</span>' +
               escapeHtml(name) +
             '</div>';
         }
         var el = document.getElementById("shoppingList");
-        el.innerHTML = html;
+        el.innerHTML = html || '<div class="event-empty">Lista vazia. Adicione um item acima.</div>';
         var nodes = el.getElementsByClassName("shop-item");
         for (var k = 0; k < nodes.length; k++) {
-          nodes[k].onclick = function () {
+          nodes[k].onclick = function (ev) {
+            var target = ev.target || ev.srcElement;
+            if (target && target.getAttribute && target.getAttribute("data-del")) {
+              var delName = target.getAttribute("data-del");
+              var list = loadShopItems();
+              var out = [];
+              for (var x = 0; x < list.length; x++) if (list[x] !== delName) out.push(list[x]);
+              saveShopItems(out);
+              var st = loadShopState();
+              delete st[delName]; saveShopState(st);
+              renderShopping();
+              return;
+            }
             var n = this.getAttribute("data-name");
             var s = loadShopState();
             s[n] = !s[n];
@@ -673,34 +837,123 @@
           };
         }
       }
+      document.getElementById("addItem").onclick = function () {
+        var input = document.getElementById("newItem");
+        var v = (input.value || "").replace(/^\s+|\s+$/g, "");
+        if (!v) return;
+        var list = loadShopItems();
+        list.push(v);
+        saveShopItems(list);
+        input.value = "";
+        renderShopping();
+      };
+      document.getElementById("newItem").onkeydown = function (e) {
+        if (e.keyCode === 13) { document.getElementById("addItem").onclick(); }
+      };
       renderShopping();
 
-      /* -------- Rotating photos (edit URLs below) -------- */
-      var PHOTOS = [
-        "https://picsum.photos/id/1015/800/600",
-        "https://picsum.photos/id/1018/800/600",
-        "https://picsum.photos/id/1039/800/600",
-        "https://picsum.photos/id/1043/800/600",
-        "https://picsum.photos/id/1058/800/600",
-        "https://picsum.photos/id/1074/800/600"
+      /* -------- Rotating photos (editable via Ajustes) -------- */
+      var DEFAULT_PHOTOS = [
+        "https://picsum.photos/id/1015/1200/800",
+        "https://picsum.photos/id/1018/1200/800",
+        "https://picsum.photos/id/1039/1200/800",
+        "https://picsum.photos/id/1043/1200/800",
+        "https://picsum.photos/id/1058/1200/800",
+        "https://picsum.photos/id/1074/1200/800"
       ];
+      var PHOTOS_KEY = "kioskPhotoUrls";
+
+      function loadPhotos() {
+        try {
+          var raw = window.localStorage.getItem(PHOTOS_KEY);
+          if (raw) {
+            var arr = JSON.parse(raw);
+            if (arr && arr.length) return arr;
+          }
+        } catch (e) {}
+        return DEFAULT_PHOTOS.slice();
+      }
+      function savePhotos(list) {
+        try { window.localStorage.setItem(PHOTOS_KEY, JSON.stringify(list)); } catch (e) {}
+      }
+
+      var PHOTOS = loadPhotos();
       var photoIdx = -1;
       var photoEl = document.getElementById("photo");
-      function nextPhoto() {
-        if (!PHOTOS.length) return;
-        photoIdx = (photoIdx + 1) % PHOTOS.length;
+      var photoCounter = document.getElementById("photoCounter");
+
+      function showPhoto() {
+        if (!PHOTOS.length) {
+          photoEl.removeAttribute("src");
+          if (photoCounter) photoCounter.innerHTML = "Nenhuma foto configurada";
+          return;
+        }
         photoEl.style.opacity = "0";
         var url = PHOTOS[photoIdx];
         var pre = new Image();
-        pre.onload = function () {
-          photoEl.src = url;
-          photoEl.style.opacity = "1";
-        };
+        pre.onload = function () { photoEl.src = url; photoEl.style.opacity = "1"; };
         pre.onerror = function () { photoEl.style.opacity = "1"; };
         pre.src = url;
+        if (photoCounter) photoCounter.innerHTML = "Foto " + (photoIdx + 1) + " de " + PHOTOS.length;
       }
+      function nextPhoto() {
+        if (!PHOTOS.length) { showPhoto(); return; }
+        photoIdx = (photoIdx + 1) % PHOTOS.length;
+        showPhoto();
+      }
+      function prevPhoto() {
+        if (!PHOTOS.length) { showPhoto(); return; }
+        photoIdx = (photoIdx - 1 + PHOTOS.length) % PHOTOS.length;
+        showPhoto();
+      }
+      document.getElementById("nextPhotoBtn").onclick = nextPhoto;
+      document.getElementById("prevPhoto").onclick = prevPhoto;
       nextPhoto();
       setInterval(nextPhoto, 20000);
+
+      /* -------- Settings: photo URLs textarea -------- */
+      var photoUrlsTa = document.getElementById("photoUrls");
+      photoUrlsTa.value = PHOTOS.join("\n");
+      document.getElementById("savePhotos").onclick = function () {
+        var lines = (photoUrlsTa.value || "").split("\n");
+        var out = [];
+        for (var i = 0; i < lines.length; i++) {
+          var l = lines[i].replace(/^\s+|\s+$/g, "");
+          if (l) out.push(l);
+        }
+        savePhotos(out);
+        PHOTOS = out;
+        photoIdx = -1;
+        nextPhoto();
+        var flash = document.getElementById("photosSaved");
+        flash.className = "saved-flash show";
+        setTimeout(function () { flash.className = "saved-flash"; }, 1500);
+      };
+      document.getElementById("resetPhotos").onclick = function () {
+        try { window.localStorage.removeItem(PHOTOS_KEY); } catch (e) {}
+        PHOTOS = DEFAULT_PHOTOS.slice();
+        photoUrlsTa.value = PHOTOS.join("\n");
+        photoIdx = -1;
+        nextPhoto();
+      };
+
+      /* -------- Page navigation -------- */
+      var navBtns = document.getElementById("nav").getElementsByTagName("button");
+      function showPage(name) {
+        var pages = ["home", "shopping", "photos", "settings"];
+        for (var i = 0; i < pages.length; i++) {
+          var pg = document.getElementById("page-" + pages[i]);
+          if (pg) pg.className = "page" + (pages[i] === "shopping" ? " page-shopping" : "") + (pages[i] === name ? " active" : "");
+        }
+        for (var j = 0; j < navBtns.length; j++) {
+          navBtns[j].className = navBtns[j].getAttribute("data-page") === name ? "active" : "";
+        }
+      }
+      for (var b = 0; b < navBtns.length; b++) {
+        (function (btn) {
+          btn.onclick = function () { showPage(btn.getAttribute("data-page")); };
+        }(navBtns[b]));
+      }
     }());
   </script>
 </body>
